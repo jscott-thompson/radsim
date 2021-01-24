@@ -249,7 +249,7 @@ for i_run = runs
         azt=[azsq*r2d;azsq*r2d]*d2r;               %   azimuth of the target
         rtgh=[cos(azt).*cos(elt) sin(azt).*cos(elt) sin(elt)]; %  unit vector in the direction of the target
 
-        rt_unamb=[params(i_run,TARGET_RANGE);params(i_run,TARGET_RANGE2)];
+        rt_unamb=[params(i_run,TARGET_RANGE);params(i_run,TARGET_RANGE2)]*Nmi2m;;
         rt=mod(rt_unamb,0.5*c*PRI);             %   ambiguous range 
         fdt=2*lambda^-1*[params(i_run,TARGET_VEL);params(i_run,TARGET_VEL2)];          %   Doppler for the target
 
