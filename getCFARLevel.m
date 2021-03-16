@@ -41,7 +41,7 @@ for i=1:Nr
             %   bottom left corner case
             Mtest=M(i-Nt-Ng:end,1:j+Nt+Ng);
             Mguard=M(i-Ng:end,1:j+Ng);            
-        elseif i>Nt+Ng & j<Nc-Nt-Ng
+        elseif i>Nt+Ng & j>Nt+Ng 
             %   bottom right corner case
             Mtest=M(i-Nt-Ng:end,j-Nt-Ng:end);
             Mguard=M(i-Ng:end,j-Ng:end);  
