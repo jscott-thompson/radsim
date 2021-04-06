@@ -19,7 +19,7 @@ end
 logfile = "rad_output.csv";
 
 % Load run matrix file
-run_matrix_file = "final_run_matrix.csv";
+run_matrix_file = "stupidly_simple_run_matrix.csv"; 
 params = rad_load_run_matrix(run_matrix_file);
 N_runs = size(params,1);
 results = zeros(N_runs,6);
@@ -33,10 +33,10 @@ if ~exist('result','var')
 end
 
 runs = 1:N_runs;
-runs(2197) = [];
+%runs(2197) = [];
 
 % Loop over runs
-for i_run = runs
+for i_run = 1
 %     if params(i_run,N_TARGETS) == 0
 %         continue;
 %     end
