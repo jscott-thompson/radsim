@@ -5,8 +5,8 @@ function result = rad_create_range_doppler_map(waveform,radar_platform,target_pl
     
     radar_signal = create_signal(waveform);
     target_response = compute_target_response(radar_signal,radar_platform,target_platform);
-    matched_filter_signal = compute_matched_filter_signal(target_response);
-    doppler_processed_signal = compute_Doppler_processed_signal(matched_filter_signal);
+    matched_filter_signal = compute_matched_filter_signal(radar_signal,target_response);
+    doppler_processed_signal = compute_Doppler_processed_signal(radar_signal,matched_filter_signal);
     normalized_Doppler_signal = normalize_Doppler_processed_signal(doppler_processed_signal);
     noisy_range_Doppler_map = add_receiver_noise(normalized_Doppler_signal);
     
@@ -68,11 +68,10 @@ function result = compute_target_response(radar_signal,radar_platform,target_pla
         target_platform.altitude,target_platform.range);
     target_doppler = compute_target_doppler(radar_signal.waveform.frequency,...
         radar_platform.velocity,target_platform.velocity);
-    target_phase = compute_target_phase_for_each_pulse(radar_signal.wavform.num_pulses,...
+    target_phase = compute_target_phase_for_each_pulse(radar_signal.waveform,...
         target_slant_range,target_doppler);
     time_shifted_signal = compute_time_shifted_signal(target_slant_range,...
-        radar_signal.waveform.pulse_repetition_frequency,...
-        radar_signal.waveform.num_fast_time_samples);
+        radar_signal);
     
     result = zeros(radar_signal.waveform.num_pulses,...
         radar_signal.waveform.num_fast_time_samples);
@@ -105,7 +104,7 @@ function result = compute_target_phase_for_each_pulse(waveform,slant_range,targe
 end
 
 function result = compute_time_shifted_signal(slant_range,radar_signal)
-    unambiguous_range_swath = compute_unambigious_range(slant_range,...
+    unambiguous_range_swath = compute_unambigious_range(...
         radar_signal.waveform.pulse_repetition_frequency);
     time_delay = mod(slant_range,unambiguous_range_swath)/get_c();
     result = circshift(radar_signal.voltage,...
@@ -114,14 +113,19 @@ function result = compute_time_shifted_signal(slant_range,radar_signal)
             radar_signal.waveform.pulse_repetition_frequency));
 end
 
+function result = compute_unambigious_range(prf)
+    result = 0.5*get_c()*compute_pulse_repetition_interval(prf);
+end
+
 function result = blank_receiver_during_transmit(reflected_signal,samples_during_pulse)
     result = reflected_signal;
     result(:,1:samples_during_pulse) = 0;
 end
 
 function result = compute_pulse_times(waveform)
-    result = (0:waveform.num_pulses)'*...
-        compute_pulse_repetition_interval(waveform.pulse_repetition_frequency);
+    num_pulses = waveform.num_pulses;
+    pulses = (0:num_pulses-1)';
+    result = pulses*compute_pulse_repetition_interval(waveform.pulse_repetition_frequency);
 end
 
 function result = compute_wave_number(signal_frequency)
@@ -134,28 +138,35 @@ function result = compute_wavelength(frequency)
 end
 
 function result = compute_matched_filter_signal(radar_signal,target_response)
-    result = zeros(radar_signal.num_pulses,...
-        2*radar_signal.num_fast_time_samples);
-    for i_pulse = 1:radar_signal.num_pulses
+    result = zeros(radar_signal.waveform.num_pulses,...
+        2*radar_signal.waveform.num_fast_time_samples-1);
+    for i_pulse = 1:radar_signal.waveform.num_pulses
         result(i_pulse,:) = xcorr(target_response(i_pulse,:),...
-            conj(radar_signal));
+            conj(radar_signal.voltage));
     end
-    result(:,1:radar_signal.num_fast_time_samples-1) = [];
+    result(:,1:radar_signal.waveform.num_fast_time_samples-1) = [];
 end
 
-function result = compute_Doppler_processed_signal(matched_filter_signal)
-    result = NaN;
+function result = compute_Doppler_processed_signal(radar_signal,matched_filter_signal)
+    result = zeros(size(matched_filter_signal));
+    for i_sample = 1:radar_signal.waveform.num_fast_time_samples
+        result(:,i_sample) = fftshift(fft(matched_filter_signal(:,i_sample)));
+    end
     
 end
 
 function result = normalize_Doppler_processed_signal(doppler_processed_signal)
-    result = NaN;
+    result = doppler_processed_signal./max(abs(doppler_processed_signal));
 
 end
 
 function result = add_receiver_noise(normalized_Doppler_processed_signal)
-    result = NaN;
-
+    peak_snr_dB = 10; % TODO: Refactor into input parameter or calculate from some radar system description
+    peak_snr_linear = db2mag(peak_snr_dB);
+    noise = sqrt(1/peak_snr_linear)*...
+        (randn(size(normalized_Doppler_processed_signal))+...
+         1j*randn(size(normalized_Doppler_processed_signal)));
+    result = abs(normalized_Doppler_processed_signal + noise);
 end
 
 % function testcompute_pulse_repetition_interval(testCase)
@@ -168,13 +179,11 @@ end
 %                   'duty_factor', 0.1,...
 %                   'num_pulses', 64,...
 %                   'num_fast_time_samples', 1000,...
-%                   
-%               
-% basebandWaveform = struct('bandwidth', 5e6,...
-%                           'phase_start', 0,...
-%                           'chirp_direction', +1,...
+%                   'bandwidth', 5e6,...
+%                   'starting_phase', 0,...
+%                   'chirp_direction', +1);
 % radar_platform = struct('altitude',9144,...
 %                         'velocity',300);
-% target_platform = struct('range',92600,...
+% target_platform = struct('range',10000,...
 %                          'altitude',9144,...
 %                          'velocity',-300);
