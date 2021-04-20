@@ -4,6 +4,7 @@
 
 clear all;  close all;
 tic
+rng(0);
 c=3.0e8;
 d2r=180/pi;
 
@@ -48,9 +49,12 @@ S=ones(NPULSES,1)*s;
 %%  SET UP TARGET
 
 %   target velocity and range
-FDTGT=[-0.5;0.33;0.5]*FDUNAMB;  
-RTGT=[0.7;2.3;0.8]*RUNAMB;    
-RCSTGT=[10;10;10];                         %   m^2
+% FDTGT=[-0.5;0.33;0.5]*FDUNAMB;  
+% RTGT=[0.7;2.3;0.8]*RUNAMB;    
+% RCSTGT=[10;10;10];                         %   m^2
+FDTGT=[-0.5]*FDUNAMB;  
+RTGT=[0.7]*RUNAMB;    
+RCSTGT=[10];                         %   m^2
 
 VTGT=0.5*lambda*FDTGT;
 R4TGT=RTGT.^-4;
