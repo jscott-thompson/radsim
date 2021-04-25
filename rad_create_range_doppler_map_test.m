@@ -20,7 +20,7 @@ range_doppler_map = rad_create_range_doppler_map(waveform,radar_platform,...
 load gold_standard_range_doppler_map.mat
 
 delta_rd = range_doppler_map - RD;
-
-imagesc(delta_rd)
+% 
+% imagesc(delta_rd)
 
 assert(all(all(delta_rd == 0)))
