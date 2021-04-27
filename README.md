@@ -1,7 +1,7 @@
 # radsim
 Simple radar simulation
 
-`simpleRadarModel3.m` is the main driver for generating data for ML purposes.
+`radsim.m` is the main function. `radsim_test.m` shows how to invoke it. `radsim_ml_datagen.m` will be refactored to show how to do parameter sweeps over a run matrix.
 
 Call `runtests` in Matlab to execute unit tests.
 
